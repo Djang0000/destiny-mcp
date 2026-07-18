@@ -9,10 +9,6 @@ from __future__ import annotations
 import json
 from datetime import date, datetime
 
-from mcp.server import Server
-from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
-
 # ── Constants ────────────────────────────────────────────────────
 
 HEAVENLY_STEMS = list("甲乙丙丁戊己庚辛壬癸")
@@ -135,8 +131,15 @@ def calculate_bazi(year: int, month: int, day: int, hour: int = 12) -> dict:
     """
     d = date(year, month, day)
 
+    # Handle Lichun boundary: before Feb 4, use previous Chinese year
+    # 立春前日期仍属前一年的干支
+    if month < 2 or (month == 2 and day < 4):
+        bazi_year = year - 1
+    else:
+        bazi_year = year
+
     # Year pillar
-    y_idx = _year_pillar_index(year)
+    y_idx = _year_pillar_index(bazi_year)
     year_stem = HEAVENLY_STEMS[y_idx % 10]
     year_branch = EARTHLY_BRANCHES[y_idx % 12]
 
@@ -203,6 +206,10 @@ def huangli_today() -> dict:
 
 
 # ── MCP Server ────────────────────────────────────────────────────
+
+from mcp.server import Server
+from mcp.server.stdio import stdio_server
+from mcp.types import Tool, TextContent
 
 server = Server("destiny-mcp")
 
